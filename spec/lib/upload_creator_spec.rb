@@ -430,6 +430,45 @@ RSpec.describe UploadCreator do
           expect(result).not_to eq(existing_upload)
         end
       end
+
+      context "when uploading for a site setting" do
+        let(:result) do
+          UploadCreator.new(
+            file,
+            filename,
+            for_site_setting: true,
+            site_setting_name: "logo",
+          ).create_for(admin.id)
+        end
+
+        context "when the existing upload url is stale for the current store" do
+          let!(:existing_upload) do
+            Fabricate(
+              :upload,
+              sha1: Upload.generate_digest(file),
+              url: "https://old-bucket.example.com/uploads/default/original/1X/stale.pdf",
+            )
+          end
+
+          it "does not return the existing upload" do
+            expect(result).not_to eq(existing_upload)
+          end
+        end
+
+        context "when the existing upload url is still valid for the current store" do
+          let!(:existing_upload) do
+            Fabricate(
+              :upload,
+              sha1: Upload.generate_digest(file),
+              url: "#{Discourse.store.relative_base_url}/original/1X/stale.pdf",
+            )
+          end
+
+          it "returns the existing upload" do
+            expect(result).to eq(existing_upload)
+          end
+        end
+      end
     end
 
     context "when the video thumbnail already exists based on the sha1" do

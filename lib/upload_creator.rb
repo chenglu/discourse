@@ -139,6 +139,10 @@ class UploadCreator
           @upload = nil
         end
 
+        if @opts[:for_site_setting] && @upload && !Discourse.store.has_been_uploaded?(@upload.url)
+          @upload = nil
+        end
+
         # return the previous upload if any
         if @upload
           add_metadata!
